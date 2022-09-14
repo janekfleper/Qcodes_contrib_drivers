@@ -18,7 +18,7 @@ class Output(InstrumentModule):
             instrument=self,
             set_cmd=f":output:state {{}}",
             get_cmd=":output:state?",
-            val_mapping=create_on_off_val_mapping(),
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
             docstring="Turn the output on and off",
         )
 
