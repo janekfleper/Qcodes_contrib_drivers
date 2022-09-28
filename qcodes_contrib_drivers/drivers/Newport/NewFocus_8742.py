@@ -1,0 +1,184 @@
+import time
+import logging
+from typing import List, Optional, Dict
+
+from pyvisa.resources.serial import SerialInstrument
+
+from qcodes import validators as vals
+from qcodes.instrument import VisaInstrument
+from qcodes.instrument.channel import ChannelList, InstrumentModule
+from qcodes.instrument.parameter import Parameter
+
+log = logging.getLogger(__name__)
+
+class Newport_NewFocus_8742_Exception(Exception):
+    pass
+
+class Newport_NewFocus_8742_ErrorCode(Newport_NewFocus_8742_Exception):
+    def __init__(self, cmd: str, err: int, msg: str) -> None:
+        self.failed_command = cmd
+        self.error_code = err
+        self.error_message = msg
+        super().__init__(f"Command {cmd} failed with error code {err} ({msg})")
+
+class Newport_NewFocus_8742_Axis(InstrumentModule):
+    """Represents one of the axes of a NewFocus 8742 controller."""
+
+    def __init__(self, parent: 'Newport_NewFocus_8742', axis: int) -> None:
+        assert axis in (1, 2, 3, 4)
+        super().__init__(parent, f"axis_{axis}")
+        self.axis = axis
+
+        self.motor_type = Parameter(
+            name="motor_type",
+            instrument=self,
+            set_cmd=f"{self.axis}QM{{}}",
+            get_cmd=f"{self.axis}QM?",
+            get_parser=int,
+            vals=vals.Ints(min_value=0, max_value=3),
+        )
+
+        self.acceleration = Parameter(
+            name="acceleration",
+            instrument=self,
+            set_cmd=f"{self.axis}AC{{}}",
+            get_cmd=f"{self.axis}AC?",
+            get_parser=int,
+            vals=vals.Ints(min_value=1, max_value=200000),
+        )
+
+        self.velocity = Parameter(
+            name="velocity",
+            instrument=self,
+            set_cmd=f"{self.axis}VA{{}}",
+            get_cmd=f"{self.axis}VA?",
+            get_parser=int,
+            vals=vals.Ints(min_value=1, max_value=2000),
+        )
+
+        self.home_position = Parameter(
+            name="home_position",
+            instrument=self,
+            set_cmd=f"{self.axis}DH{{}}",
+            get_cmd=f"{self.axis}DH?",
+            get_parser=int,
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+        )
+
+        self.actual_position = Parameter(
+            name="actual_position",
+            instrument=self,
+            set_cmd=False,
+            get_cmd=f"{self.axis}TP?",
+            get_parser=int,
+        )
+
+        self.move_absolute = Parameter(
+            name="move_absolute",
+            instrument=self,
+            set_cmd=f"{self.axis}PR{{}}",
+            get_cmd=f"{self.axis}PR?",
+            get_parser=int,
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+        )
+
+        self.move_relative = Parameter(
+            name="move_relative",
+            instrument=self,
+            set_cmd=f"{self.axis}PR{{}}",
+            get_cmd=f"{self.axis}PR?",
+            get_parser=int,
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+        )
+
+    def move(self, direction: str) -> None:
+        """Indefinite move command."""
+        assert direction in ["+", "-"]
+        self.write(f"{self.axis}MV{direction}")
+
+    def stop(self) -> None:
+        """Stop motion command."""
+        self.write(f"{self.axis}ST")
+
+class Newport_NewFocus_8742(VisaInstrument):
+    """
+    QCoDeS driver for the Newport NewFocus 8742 Picomotor Motion Controller.
+    Args:
+        name (str): name of the instrument.
+        address (str): VISA string describing the serial port,
+            for example "ASRL7" for COM7.
+    """
+
+    # By default, expect response to command within 1 second.
+    default_timeout = 1.0
+
+    # After a command which does not generate a response, a short
+    # delay is needed before we can send the following command.
+    command_delay = 0.002
+
+    # After a reset command, a longer delay is needed before
+    # we can send the following command.
+    reset_delay = 0.05
+
+    def __init__(self, name: str, address: str) -> None:
+        log.debug(f"Opening Newport_NewFocus_8742 at {address}")
+
+        super().__init__(name,
+                         address,
+                         timeout=self.default_timeout,
+                         terminator="\r\n")
+        assert isinstance(self.visa_handle, SerialInstrument)
+        self.visa_handle.baud_rate = 912600
+
+        self._current_axis: Optional[int] = None
+
+        axes = [Newport_NewFocus_8742_Axis(self, axis+1) for axis in range(4)]
+        axis_list = ChannelList(self, "axes", Newport_NewFocus_8742_Axis, axes)
+        self.add_submodule("axes", axis_list)
+
+        self.add_function("reset",
+                          call_cmd=self.reset,
+                          args=())
+
+    def get_last_error(self) -> List[str]:
+        """Send a TB command (get error of previous command) and return
+        a numerical error code and the error message.
+        Returns:
+            str: Error code for previous command.
+            str: Error message for previous command.
+        This function is called automatically after each command sent
+        to the device. When a command results in error, exception
+        Newport_NewFocus_8742_ErrorCode is raised.
+        """
+        resp = self.ask('TB?')
+        return resp.split(',')
+
+    def reset(self) -> None:
+        """Reset the motor controller."""
+        self._current_motor = None
+        super().write("RS")
+        time.sleep(self.reset_delay)
+
+    def get_idn(self) -> Dict[str, Optional[str]]:
+        resp = self.ask("VE")
+        words = resp.strip().split()
+        if len(words) == 4:
+            model = words[0]
+            version = words[2]
+            info = words[3]
+        else:
+            msg = f"Unexpected response to VE command: {resp!r}"
+            log.warning(msg)
+            raise Newport_NewFocus_8742_Exception()(msg)
+        return {"vendor": "Newport",
+                "model": model,
+                "firmware": version,
+                "info": info}
+
+    def write(self, cmd: str) -> None:
+        super().write(cmd)
+        time.sleep(self.command_delay)
+        err, msg = self.get_last_error()
+        if err != 0:
+            log.warning(f"Command {cmd} failed with error {err} ({msg})")
+            raise Newport_NewFocus_8742_ErrorCode(cmd, err, msg)
