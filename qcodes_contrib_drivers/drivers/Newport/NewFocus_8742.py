@@ -6,7 +6,7 @@ from pyvisa.resources.serial import SerialInstrument
 
 from qcodes import validators as vals
 from qcodes.instrument import VisaInstrument
-from qcodes.instrument.channel import ChannelList, InstrumentModule
+from qcodes.instrument.channel import ChannelList, InstrumentChannel
 from qcodes.instrument.parameter import Parameter
 
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class Newport_NewFocus_8742_ErrorCode(Newport_NewFocus_8742_Exception):
         self.error_message = msg
         super().__init__(f"Command {cmd} failed with error code {err} ({msg})")
 
-class Newport_NewFocus_8742_Axis(InstrumentModule):
+class Newport_NewFocus_8742_Axis(InstrumentChannel):
     """Represents one of the axes of a NewFocus 8742 controller."""
 
     def __init__(self, parent: 'Newport_NewFocus_8742', axis: int) -> None:
