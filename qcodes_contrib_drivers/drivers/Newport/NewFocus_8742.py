@@ -142,14 +142,14 @@ class Newport_NewFocus_8742(VisaInstrument):
         """Send a TB command (get error of previous command) and return
         a numerical error code and the error message.
         Returns:
-            str: Error code for previous command.
+            int: Error code for previous command.
             str: Error message for previous command.
         This function is called automatically after each command sent
         to the device. When a command results in error, exception
         Newport_NewFocus_8742_ErrorCode is raised.
         """
-        resp = self.ask('TB?')
-        return resp.split(',')
+        err, msg = self.ask('TB?').split(',')
+        return int(err), msg
 
     def reset(self) -> None:
         """Reset the motor controller."""
