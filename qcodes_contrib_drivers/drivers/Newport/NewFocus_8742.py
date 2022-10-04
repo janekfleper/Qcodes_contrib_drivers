@@ -76,8 +76,8 @@ class Newport_NewFocus_8742_Axis(InstrumentChannel):
         self.move_absolute = Parameter(
             name="move_absolute",
             instrument=self,
-            set_cmd=f"{self.axis}PR{{}}",
-            get_cmd=f"{self.axis}PR?",
+            set_cmd=f"{self.axis}PA{{}}",
+            get_cmd=f"{self.axis}PA?",
             get_parser=int,
             vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
         )
