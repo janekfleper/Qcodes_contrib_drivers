@@ -105,8 +105,8 @@ class Newport_NewFocus_8742(VisaInstrument):
     QCoDeS driver for the Newport NewFocus 8742 Picomotor Motion Controller.
     Args:
         name (str): name of the instrument.
-        address (str): VISA string describing the serial port,
-            for example "ASRL7" for COM7.
+        address (str): VISA string describing the TCP connection,
+            for example "TCPIP::192.168.0.74::23::SOCKET".
     """
 
     # By default, expect response to command within 1 second.
