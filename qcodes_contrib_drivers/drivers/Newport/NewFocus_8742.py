@@ -127,8 +127,6 @@ class Newport_NewFocus_8742(VisaInstrument):
                          address,
                          timeout=self.default_timeout,
                          terminator="\r\n")
-        assert isinstance(self.visa_handle, SerialInstrument)
-        self.visa_handle.baud_rate = 912600
 
         self._current_axis: Optional[int] = None
 
