@@ -2,8 +2,6 @@ import time
 import logging
 from typing import List, Optional, Dict
 
-from pyvisa.resources.serial import SerialInstrument
-
 from qcodes import validators as vals
 from qcodes.instrument import VisaInstrument
 from qcodes.instrument.channel import ChannelList, InstrumentChannel
