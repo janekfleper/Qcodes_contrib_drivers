@@ -11,20 +11,20 @@ from qcodes.instrument.parameter import Parameter
 
 log = logging.getLogger(__name__)
 
-class Newport_NewFocus_8742_Exception(Exception):
+class NewportNewFocus8742Exception(Exception):
     pass
 
-class Newport_NewFocus_8742_ErrorCode(Newport_NewFocus_8742_Exception):
+class NewportNewFocus8742ErrorCode(NewportNewFocus8742Exception):
     def __init__(self, cmd: str, err: int, msg: str) -> None:
         self.failed_command = cmd
         self.error_code = err
         self.error_message = msg
         super().__init__(f"Command {cmd} failed with error code {err} ({msg})")
 
-class Newport_NewFocus_8742_Axis(InstrumentChannel):
+class NewportNewFocus8742Axis(InstrumentChannel):
     """Represents one of the axes of a NewFocus 8742 controller."""
 
-    def __init__(self, parent: 'Newport_NewFocus_8742', axis: int) -> None:
+    def __init__(self, parent: 'NewportNewFocus8742', axis: int) -> None:
         assert axis in (1, 2, 3, 4)
         super().__init__(parent, f"axis_{axis}")
         self.axis = axis
@@ -100,7 +100,7 @@ class Newport_NewFocus_8742_Axis(InstrumentChannel):
         """Stop motion command."""
         self.write(f"{self.axis}ST")
 
-class Newport_NewFocus_8742(VisaInstrument):
+class NewportNewFocus8742(VisaInstrument):
     """
     QCoDeS driver for the Newport NewFocus 8742 Picomotor Motion Controller.
     Args:
@@ -121,7 +121,7 @@ class Newport_NewFocus_8742(VisaInstrument):
     reset_delay = 0.05
 
     def __init__(self, name: str, address: str) -> None:
-        log.debug(f"Opening Newport_NewFocus_8742 at {address}")
+        log.debug(f"Opening NewportNewFocus8742 at {address}")
 
         super().__init__(name,
                          address,
@@ -130,8 +130,8 @@ class Newport_NewFocus_8742(VisaInstrument):
 
         self._current_axis: Optional[int] = None
 
-        axes = [Newport_NewFocus_8742_Axis(self, axis+1) for axis in range(4)]
-        axis_list = ChannelList(self, "axes", Newport_NewFocus_8742_Axis, axes)
+        axes = [NewportNewFocus8742Axis(self, axis+1) for axis in range(4)]
+        axis_list = ChannelList(self, "axes", NewportNewFocus8742Axis, axes)
         self.add_submodule("axes", axis_list)
 
         self.add_function("reset",
@@ -146,7 +146,7 @@ class Newport_NewFocus_8742(VisaInstrument):
             str: Error message for previous command.
         This function is called automatically after each command sent
         to the device. When a command results in error, exception
-        Newport_NewFocus_8742_ErrorCode is raised.
+        NewportNewFocus8742ErrorCode is raised.
         """
         err, msg = self.ask('TB?').split(',')
         return int(err), msg
@@ -167,7 +167,7 @@ class Newport_NewFocus_8742(VisaInstrument):
         else:
             msg = f"Unexpected response to VE command: {resp!r}"
             log.warning(msg)
-            raise Newport_NewFocus_8742_Exception(msg)
+            raise NewportNewFocus8742Exception(msg)
         return {"vendor": "Newport",
                 "model": model,
                 "firmware": version,
@@ -179,4 +179,4 @@ class Newport_NewFocus_8742(VisaInstrument):
         err, msg = self.get_last_error()
         if err != 0:
             log.warning(f"Command {cmd} failed with error {err} ({msg})")
-            raise Newport_NewFocus_8742_ErrorCode(cmd, err, msg)
+            raise NewportNewFocus8742ErrorCode(cmd, err, msg)
