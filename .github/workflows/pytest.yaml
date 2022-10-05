@@ -18,19 +18,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.8", "3.9", "3.10"]
         exclude:
           - os: windows-latest
-            python-version: 3.8
+            python-version: "3.9"
           - os: windows-latest
-            python-version: 3.9
+            python-version: "3.10"
     env:
       DISPLAY: ':99.0'
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
 
     steps:
-    - uses: actions/checkout@v3.0.2
+    - uses: actions/checkout@v3.1.0
       with:
         submodules: true
     - name: setup ubuntu-latest xvfb
@@ -44,7 +44,7 @@ jobs:
       id: prepare-cache-pip
       uses: ./.github/actions/prepare-cache-pip
     - name: pip cache
-      uses: actions/cache@v3.0.9
+      uses: actions/cache@v3.0.10
       with:
         path: ${{ steps.prepare-cache-pip.outputs.cache-dir }}
         key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ hashFiles('**/setup.cfg') }}
@@ -55,7 +55,6 @@ jobs:
         pip install .[test] -c requirements.txt
     - name: Run Mypy
       run: mypy qcodes_contrib_drivers
-      if: matrix.python-version != '3.7'
     - name: Run tests
       run: |
         pytest --cov=qcodes_contrib_drivers --cov-report xml --cov-config=setup.cfg qcodes_contrib_drivers
