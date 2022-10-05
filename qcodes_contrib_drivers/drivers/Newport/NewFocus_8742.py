@@ -122,8 +122,6 @@ class NewportNewFocus8742(VisaInstrument):
                          timeout=self.default_timeout,
                          terminator="\r\n")
 
-        self._current_axis: Optional[int] = None
-
         axes = [NewportNewFocus8742Axis(self, axis+1) for axis in range(4)]
         axis_list = ChannelList(self, "axes", NewportNewFocus8742Axis, axes)
         self.add_submodule("axes", axis_list)
