@@ -107,19 +107,16 @@ class NewportNewFocus8742(VisaInstrument):
             for example "TCPIP::192.168.0.74::23::SOCKET".
     """
 
-    # By default, expect response to command within 1 second.
-    default_timeout = 1.0
-
     # After a command which does not generate a response, a short
     # delay is needed before we can send the following command.
     command_delay = 0.002
 
-    def __init__(self, name: str, address: str) -> None:
+    def __init__(self, name: str, address: str, timeout: float = 1.0) -> None:
         self.log.debug(f"Opening NewportNewFocus8742 at {address}")
 
         super().__init__(name,
                          address,
-                         timeout=self.default_timeout,
+                         timeout=timeout,
                          terminator="\r\n")
 
         axes = [NewportNewFocus8742Axis(self, axis+1) for axis in range(4)]
