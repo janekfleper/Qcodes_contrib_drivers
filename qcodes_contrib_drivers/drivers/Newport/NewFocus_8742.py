@@ -167,7 +167,7 @@ class Newport_NewFocus_8742(VisaInstrument):
         else:
             msg = f"Unexpected response to VE command: {resp!r}"
             log.warning(msg)
-            raise Newport_NewFocus_8742_Exception()(msg)
+            raise Newport_NewFocus_8742_Exception(msg)
         return {"vendor": "Newport",
                 "model": model,
                 "firmware": version,
