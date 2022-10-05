@@ -114,10 +114,6 @@ class NewportNewFocus8742(VisaInstrument):
     # delay is needed before we can send the following command.
     command_delay = 0.002
 
-    # After a reset command, a longer delay is needed before
-    # we can send the following command.
-    reset_delay = 0.05
-
     def __init__(self, name: str, address: str) -> None:
         self.log.debug(f"Opening NewportNewFocus8742 at {address}")
 
@@ -133,7 +129,7 @@ class NewportNewFocus8742(VisaInstrument):
         self.add_submodule("axes", axis_list)
 
         self.add_function("reset",
-                          call_cmd=self.reset,
+                          call_cmd="RS",
                           args=())
 
     def get_last_error(self) -> List[str]:
@@ -148,12 +144,6 @@ class NewportNewFocus8742(VisaInstrument):
         """
         err, msg = self.ask('TB?').split(',')
         return int(err), msg
-
-    def reset(self) -> None:
-        """Reset the motor controller."""
-        self._current_motor = None
-        super().write("RS")
-        time.sleep(self.reset_delay)
 
     def get_idn(self) -> Dict[str, Optional[str]]:
         resp = self.ask("VE")
