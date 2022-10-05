@@ -121,7 +121,7 @@ class NewportNewFocus8742(VisaInstrument):
     reset_delay = 0.05
 
     def __init__(self, name: str, address: str) -> None:
-        log.debug(f"Opening NewportNewFocus8742 at {address}")
+        self.log.debug(f"Opening NewportNewFocus8742 at {address}")
 
         super().__init__(name,
                          address,
@@ -166,7 +166,7 @@ class NewportNewFocus8742(VisaInstrument):
             info = words[3]
         else:
             msg = f"Unexpected response to VE command: {resp!r}"
-            log.warning(msg)
+            self.log.warning(msg)
             raise NewportNewFocus8742Exception(msg)
         return {"vendor": "Newport",
                 "model": model,
@@ -178,5 +178,5 @@ class NewportNewFocus8742(VisaInstrument):
         time.sleep(self.command_delay)
         err, msg = self.get_last_error()
         if err != 0:
-            log.warning(f"Command {cmd} failed with error {err} ({msg})")
+            self.log.warning(f"Command {cmd} failed with error {err} ({msg})")
             raise NewportNewFocus8742ErrorCode(cmd, err, msg)
