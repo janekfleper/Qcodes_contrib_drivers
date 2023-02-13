@@ -9,8 +9,10 @@ from qcodes.instrument.parameter import Parameter
 
 log = logging.getLogger(__name__)
 
+
 class NewportNewFocus8742Exception(Exception):
     pass
+
 
 class NewportNewFocus8742ErrorCode(NewportNewFocus8742Exception):
     def __init__(self, cmd: str, err: int, msg: str) -> None:
@@ -19,10 +21,11 @@ class NewportNewFocus8742ErrorCode(NewportNewFocus8742Exception):
         self.error_message = msg
         super().__init__(f"Command {cmd} failed with error code {err} ({msg})")
 
+
 class NewportNewFocus8742Axis(InstrumentChannel):
     """Represents one of the axes of a NewFocus 8742 controller."""
 
-    def __init__(self, parent: 'NewportNewFocus8742', axis: int) -> None:
+    def __init__(self, parent: "NewportNewFocus8742", axis: int) -> None:
         assert axis in (1, 2, 3, 4)
         super().__init__(parent, f"axis_{axis}")
         self.axis = axis
@@ -60,7 +63,7 @@ class NewportNewFocus8742Axis(InstrumentChannel):
             set_cmd=f"{self.axis}DH{{}}",
             get_cmd=f"{self.axis}DH?",
             get_parser=int,
-            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31) - 1),
         )
 
         self.actual_position = Parameter(
@@ -77,7 +80,7 @@ class NewportNewFocus8742Axis(InstrumentChannel):
             set_cmd=f"{self.axis}PA{{}}",
             get_cmd=f"{self.axis}PA?",
             get_parser=int,
-            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31) - 1),
         )
 
         self.move_relative = Parameter(
@@ -86,7 +89,7 @@ class NewportNewFocus8742Axis(InstrumentChannel):
             set_cmd=f"{self.axis}PR{{}}",
             get_cmd=f"{self.axis}PR?",
             get_parser=int,
-            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31)-1),
+            vals=vals.Ints(min_value=-int(2**31), max_value=int(2**31) - 1),
         )
 
     def move(self, direction: str) -> None:
@@ -97,6 +100,7 @@ class NewportNewFocus8742Axis(InstrumentChannel):
     def stop(self) -> None:
         """Stop motion command."""
         self.write(f"{self.axis}ST")
+
 
 class NewportNewFocus8742(VisaInstrument):
     """
@@ -112,20 +116,14 @@ class NewportNewFocus8742(VisaInstrument):
     command_delay = 0.002
 
     def __init__(self, name: str, address: str, timeout: float = 1.0) -> None:
+        super().__init__(name, address, timeout=timeout, terminator="\r\n")
+
         self.log.debug(f"Opening NewportNewFocus8742 at {address}")
-
-        super().__init__(name,
-                         address,
-                         timeout=timeout,
-                         terminator="\r\n")
-
-        axes = [NewportNewFocus8742Axis(self, axis+1) for axis in range(4)]
+        axes = [NewportNewFocus8742Axis(self, axis + 1) for axis in range(4)]
         axis_list = ChannelList(self, "axes", NewportNewFocus8742Axis, axes)
         self.add_submodule("axes", axis_list)
 
-        self.add_function("reset",
-                          call_cmd="RS",
-                          args=())
+        self.add_function("reset", call_cmd="RS", args=())
 
     def get_last_error(self) -> List[str]:
         """Send a TB command (get error of previous command) and return
@@ -137,7 +135,7 @@ class NewportNewFocus8742(VisaInstrument):
         to the device. When a command results in error, exception
         NewportNewFocus8742ErrorCode is raised.
         """
-        err, msg = self.ask('TB?').split(',')
+        err, msg = self.ask("TB?").split(",")
         return int(err), msg
 
     def get_idn(self) -> Dict[str, Optional[str]]:
@@ -151,10 +149,7 @@ class NewportNewFocus8742(VisaInstrument):
             msg = f"Unexpected response to VE command: {resp!r}"
             self.log.warning(msg)
             raise NewportNewFocus8742Exception(msg)
-        return {"vendor": "Newport",
-                "model": model,
-                "firmware": version,
-                "info": info}
+        return {"vendor": "Newport", "model": model, "firmware": version, "info": info}
 
     def write(self, cmd: str) -> None:
         super().write(cmd)
