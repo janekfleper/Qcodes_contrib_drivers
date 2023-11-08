@@ -9,6 +9,7 @@ def test_list_explicit(qdac):  # noqa
         repetitions=10,
         voltages=[-1, 0, 1],
         dwell_s=1e-6,
+        delay_s=0.1,
         backwards=True,
         stepped=True
     )
@@ -19,11 +20,11 @@ def test_list_explicit(qdac):  # noqa
         'sour1:list:volt -1,0,1',
         'sour1:list:tmod step',
         'sour1:list:dwel 1e-06',
+        'sour1:dc:del 0.1',
         'sour1:list:dir down',
         'sour1:list:coun 10',
         'sour1:dc:trig:sour bus',
         'sour1:dc:init:cont on',
-        'sour1:dc:init',
     ]
 
 
@@ -37,11 +38,11 @@ def test_list_implicit(qdac):  # noqa
         'sour1:list:volt 1,2,3,4',
         'sour1:list:tmod auto',
         'sour1:list:dwel 0.001',
+        'sour1:dc:del 0',
         'sour1:list:dir up',
         'sour1:list:coun 1',
         'sour1:dc:trig:sour bus',
         'sour1:dc:init:cont on',
-        'sour1:dc:init',
     ]
 
 
@@ -75,7 +76,6 @@ def test_list_append(qdac):  # noqa
     assert qdac.get_recorded_scpi_commands() == [
         'sour1:list:volt:app 5,6',
         'sour1:dc:init:cont on',
-        'sour1:dc:init',
     ]
 
 
@@ -111,11 +111,11 @@ def test_list_infinite(qdac):  # noqa
         'sour1:list:volt 1,2,3,4',
         'sour1:list:tmod auto',
         'sour1:list:dwel 0.001',
+        'sour1:dc:del 0',
         'sour1:list:dir up',
         'sour1:list:coun -1',
         'sour1:dc:trig:sour bus',
         'sour1:dc:init:cont on',
-        'sour1:dc:init',
     ]
 
 
@@ -173,7 +173,6 @@ def test_list_start_trigger_fires(qdac):  # noqa
     # -----------------------------------------------------------------------
     assert qdac.get_recorded_scpi_commands() == [
         'sour1:dc:init:cont on',
-        'sour1:dc:init',
         f'tint {trigger.value}'
     ]
 
@@ -232,7 +231,6 @@ def test_list_trigger_on_internal(qdac):  # noqa
     assert qdac.get_recorded_scpi_commands() == [
         f'sour1:dc:trig:sour int{trigger.value}',
         f'sour1:dc:init:cont on',
-        'sour1:dc:init'
     ]
 
 
@@ -246,7 +244,6 @@ def test_list_trigger_on_external(qdac):  # noqa
     assert qdac.get_recorded_scpi_commands() == [
         f'sour1:dc:trig:sour ext{trigger}',
         f'sour1:dc:init:cont on',
-        'sour1:dc:init'
     ]
 
 
@@ -275,3 +272,102 @@ def test_list_get_voltages(qdac):  # noqa
 #         f'sour1:dc:trig:sour int{trigger.value}',
 #         'sour1:dc:init',
 #     ]
+
+
+def test_list_cleanup_triggering_on_exit(qdac):  # noqa
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:trig:sour imm'
+    ]
+
+
+def test_list_main_trigger_is_deallocated_on_exit(qdac):  # noqa
+    qdac._set_up_internal_triggers()
+    trigger = qdac.allocate_trigger()
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        dc_list.start_on(trigger)
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:trig:sour imm'
+    ]
+    assert trigger.value in qdac._internal_triggers
+
+
+def test_list_main_trigger_external_is_dismissed_on_exit(qdac):  # noqa
+    trigger = ExternalInput(2)
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        dc_list.start_on_external(trigger)
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:trig:sour imm'
+    ]
+
+
+def test_list_start_marker_is_removed_on_exit(qdac):  # noqa
+    qdac._set_up_internal_triggers()
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        trigger = dc_list.start_marker()
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:mark:star 0',
+        'sour1:dc:trig:sour imm'
+    ]
+    assert trigger.value in qdac._internal_triggers
+
+
+def test_list_end_marker_is_removed_on_exit(qdac):  # noqa
+    qdac._set_up_internal_triggers()
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        trigger = dc_list.end_marker()
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:mark:end 0',
+        'sour1:dc:trig:sour imm'
+    ]
+    assert trigger.value in qdac._internal_triggers
+
+
+def test_list_step_start_marker_is_removed_on_exit(qdac):  # noqa
+    qdac._set_up_internal_triggers()
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        trigger = dc_list.step_start_marker()
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:mark:sst 0',
+        'sour1:dc:trig:sour imm'
+    ]
+    assert trigger.value in qdac._internal_triggers
+
+
+def test_list_step_end_marker_is_removed_on_exit(qdac):  # noqa
+    qdac._set_up_internal_triggers()
+    # -----------------------------------------------------------------------
+    with qdac.ch01.dc_list(voltages=range(1, 5)) as dc_list:
+        trigger = dc_list.step_end_marker()
+        qdac.start_recording_scpi()
+    # -----------------------------------------------------------------------
+    assert qdac.get_recorded_scpi_commands() == [
+        'sour1:dc:abor',
+        'sour1:dc:mark:send 0',
+        'sour1:dc:trig:sour imm'
+    ]
+    assert trigger.value in qdac._internal_triggers
