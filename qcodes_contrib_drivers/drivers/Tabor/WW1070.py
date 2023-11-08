@@ -16,8 +16,8 @@ class Output(InstrumentModule):
         self.state = Parameter(
             name="state",
             instrument=self,
-            set_cmd=f":output:state {{}}",
-            get_cmd=":output:state?",
+            set_cmd=f"output:state {{}}",
+            get_cmd="output:state?",
             val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
             docstring="Turn the output on and off",
         )
@@ -25,8 +25,8 @@ class Output(InstrumentModule):
         self.filter = Parameter(
             name="filter",
             instrument=self,
-            set_cmd=f":output:filter {{}}",
-            get_cmd=":output:filter?",
+            set_cmd=f"output:filter {{}}",
+            get_cmd="output:filter?",
             vals=vals.Enum("none", "25M", "50M", "all"),
             docstring="Select the filter that is connected to the output",
         )
@@ -59,8 +59,8 @@ class Voltage(InstrumentModule):
         self.amplitude = Parameter(
             name="amplitude",
             instrument=self,
-            set_cmd=f":voltage {{}}",
-            get_cmd=":voltage?",
+            set_cmd=f"voltage {{}}",
+            get_cmd="voltage?",
             get_parser=float,
             vals=vals.MultiType(vals.Numbers(10e-3, 10),
                                 vals.Enum("minimum", "maximum")),
@@ -70,8 +70,8 @@ class Voltage(InstrumentModule):
         self.offset = Parameter(
             name="offset",
             instrument=self,
-            set_cmd=f":voltage:offset {{}}",
-            get_cmd=":voltage:offset?",
+            set_cmd=f"voltage:offset {{}}",
+            get_cmd="voltage:offset?",
             get_parser=float,
             vals=vals.Numbers(-4.5, 4.5),
             docstring="Amplitude offset of the output waveform",
