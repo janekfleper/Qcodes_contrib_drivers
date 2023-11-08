@@ -169,7 +169,6 @@ class WW1070(VisaInstrument):
         name: str,
         address: str,
         timeout: float = 20,
-        silence_pyvisapy_warning: bool = False,
         **kwargs: Any,
     ):
         """
@@ -179,7 +178,6 @@ class WW1070(VisaInstrument):
             address: Instrument address as used by VISA
             timeout: Visa timeout, in secs.
             channels: The number of channels on the scope.
-            silence_pyvisapy_warning: Don't warn about pyvisa-py at startup
         """
         super().__init__(name, address, timeout=timeout, terminator="\n", **kwargs)
         self.connect_message()
