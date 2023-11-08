@@ -10,7 +10,7 @@ from qcodes.utils.helpers import create_on_off_val_mapping
 
 
 class Output(InstrumentModule):
-    def __init__(self, parent: 'WW1070', name: str, **kwargs: Any):
+    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.state = Parameter(
@@ -31,8 +31,9 @@ class Output(InstrumentModule):
             docstring="Select the filter that is connected to the output",
         )
 
+
 class Function(InstrumentModule):
-    def __init__(self, parent: 'WW1070', name: str, **kwargs: Any):
+    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.mode = Parameter(
@@ -52,8 +53,9 @@ class Function(InstrumentModule):
             docstring="Shape of the waveform at the output connector",
         )
 
+
 class Voltage(InstrumentModule):
-    def __init__(self, parent: 'WW1070', name: str, **kwargs: Any):
+    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.amplitude = Parameter(
@@ -62,8 +64,9 @@ class Voltage(InstrumentModule):
             set_cmd=f"voltage {{}}",
             get_cmd="voltage?",
             get_parser=float,
-            vals=vals.MultiType(vals.Numbers(10e-3, 10),
-                                vals.Enum("minimum", "maximum")),
+            vals=vals.MultiType(
+                vals.Numbers(10e-3, 10), vals.Enum("minimum", "maximum")
+            ),
             docstring="Peak to peak amplitude of the output waveform",
         )
 
@@ -76,6 +79,7 @@ class Voltage(InstrumentModule):
             vals=vals.Numbers(-4.5, 4.5),
             docstring="Amplitude offset of the output waveform",
         )
+
 
 class WW1070(VisaInstrument):
     """
@@ -102,7 +106,7 @@ class WW1070(VisaInstrument):
         super().__init__(name, address, timeout=timeout, terminator="\n", **kwargs)
         self.connect_message()
 
-        self.model = self.IDN()['model']
+        self.model = self.IDN()["model"]
 
         self.add_submodule("output", Output(self, "output"))
         self.add_submodule("function", Function(self, "function"))
