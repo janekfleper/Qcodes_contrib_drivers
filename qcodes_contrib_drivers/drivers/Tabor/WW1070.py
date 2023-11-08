@@ -81,6 +81,84 @@ class Voltage(InstrumentModule):
         )
 
 
+class Trigger(InstrumentModule):
+    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
+        super().__init__(parent, name, **kwargs)
+
+        self.burst = Parameter(
+            name="burst",
+            instrument=self,
+            set_cmd="trigger:burst {}",
+            get_cmd="trigger:burst?",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            docstring="Turn the burst mode on and off",
+        )
+
+        self.count = Parameter(
+            name="count",
+            instrument=self,
+            set_cmd="trigger:count {}",
+            get_cmd="trigger:count?",
+            get_parser=int,
+            vals=vals.Ints(1, 1000000),
+            docstring="Trigger burst counter",
+        )
+
+        self.gate = Parameter(
+            name="gate",
+            instrument=self,
+            set_cmd="trigger:gate {}",
+            get_cmd="trigger:gate?",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            docstring="Turn the gate mode on and off",
+        )
+
+        self.phase = Parameter(
+            name="phase",
+            instrument=self,
+            set_cmd="trigger:phase {}",
+            get_cmd="trigger:phase?",
+            get_parser=int,
+            vals=vals.Ints(0, 2000000),
+            docstring="Trigger start phase",
+        )
+
+        self.slope = Parameter(
+            name="slope",
+            instrument=self,
+            set_cmd="trigger:slope {}",
+            get_cmd="trigger:slope?",
+            vals=vals.Enum("positive", "negative"),
+            docstring="Set the edge sensitivity for the trigger input",
+        )
+
+        self.source = Parameter(
+            name="source",
+            instrument=self,
+            set_cmd="trigger:source:advance {}",
+            get_cmd="trigger:source:advance?",
+            vals=vals.Enum("external", "internal"),
+            docstring="Set trigger input source",
+        )
+
+        self.timer = Parameter(
+            name="timer",
+            instrument=self,
+            set_cmd="trigger:timer {}",
+            get_cmd="trigger:timer?",
+            get_parser=float,
+            vals=vals.Numbers(100e-3, 2e6),
+            docstring="Set the timer for the internal trigger generator",
+        )
+
+        self.immediate = Function(
+            name="immediate",
+            instrument=self,
+            call_cmd="trigger:immediate",
+            docstring="Simulate a trigger event",
+        )
+
+
 class WW1070(VisaInstrument):
     """
     This is the QCoDeS driver for the Keysight InfiniiVision oscilloscopes
@@ -111,3 +189,4 @@ class WW1070(VisaInstrument):
         self.add_submodule("output", Output(self, "output"))
         self.add_submodule("function", Function(self, "function"))
         self.add_submodule("voltage", Voltage(self, "voltage"))
+        self.add_submodule("trigger", Trigger(self, "trigger"))
