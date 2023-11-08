@@ -58,11 +58,11 @@ class Voltage(InstrumentModule):
     def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
-        self.amplitude = Parameter(
-            name="amplitude",
+        self.level = Parameter(
+            name="level",
             instrument=self,
-            set_cmd=f"voltage {{}}",
-            get_cmd="voltage?",
+            set_cmd=f"voltage:level {{}}",
+            get_cmd="voltage:level?",
             get_parser=float,
             vals=vals.MultiType(
                 vals.Numbers(10e-3, 10), vals.Enum("minimum", "maximum")
