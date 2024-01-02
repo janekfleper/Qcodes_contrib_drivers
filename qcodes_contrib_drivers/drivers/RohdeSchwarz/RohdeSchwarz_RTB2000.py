@@ -155,6 +155,77 @@ class RohdeSchwarzRTB2000Trigger(InstrumentModule):
         self.add_submodule("edge", RohdeSchwarzRTB2000EdgeTrigger(self, "edge"))
         self.add_submodule("width", RohdeSchwarzRTB2000WidthTrigger(self, "width"))
 
+class RohdeSchwarzRTB2000Timebase(InstrumentModule):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
+        super().__init__(parent, name, **kwargs)
+
+        self.scale = Parameter(
+            name="scale",
+            instrument=self,
+            get_cmd="timebase:scale?",
+            set_cmd="timebase:scale {}",
+            vals=vals.Numbers(min_value=1e-9, max_value=500),
+            get_parser=float,
+            label="Horizontal Scale",
+        )
+
+        self.position = Parameter(
+            name="position",
+            instrument=self,
+            get_cmd="timebase:position?",
+            set_cmd="timebase:position {}",
+            vals=vals.Numbers(min_value=-5999.856, max_value=51539607.402),
+            get_parser=float,
+            label="Horizontal Position",
+        )
+
+        self.reference = Parameter(
+            name="reference",
+            instrument=self,
+            get_cmd="timebase:reference?",
+            set_cmd="timebase:reference {}",
+            val_mapping={"left": 8.33, "middle": 50, "right": 91.7},
+            get_parser=float,
+            label="Horizontal Reference Point",
+        )
+
+        self.range = Parameter(
+            name="range",
+            instrument=self,
+            get_cmd="timebase:range?",
+            set_cmd="timebase:range {}",
+            vals=vals.Numbers(min_value=1.2e-8, max_value=6000),
+            get_parser=float,
+            label="Horizontal Range",
+        )
+
+        self.real_acquisition_time = Parameter(
+            name="real_acquisition_time",
+            instrument=self,
+            get_cmd="timebase:ratime?",
+            get_parser=float,
+            label="Real Acquisition Time",
+        )
+
+        self.roll_automatic = Parameter(
+            name="roll_automatic",
+            instrument=self,
+            get_cmd="timebase:roll:automatic?",
+            set_cmd="timebase:roll:automatic {}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Automatic Roll Mode",
+        )
+
+        self.roll_minimum_time = Parameter(
+            name="roll_minimum_time",
+            instrument=self,
+            get_cmd="timebase:roll:mtime?",
+            set_cmd="timebase:roll:mtime {}",
+            vals=vals.Numbers(min_value=50e-3, max_value=500),
+            get_parser=float,
+            label="Minimum Roll Time",
+        )
+
 class RohdeSchwarzRTB2000(VisaInstrument):
     """
     QCoDeS driver for the Rohde&Schwarz RTB2000 family
@@ -164,3 +235,4 @@ class RohdeSchwarzRTB2000(VisaInstrument):
         super().__init__(name=name, address=address, terminator="\n", **kwargs)
 
         self.add_submodule("trigger", RohdeSchwarzRTB2000Trigger(self, "trigger"))
+        self.add_submodule("timebase", RohdeSchwarzRTB2000Timebase(self, "timebase"))
