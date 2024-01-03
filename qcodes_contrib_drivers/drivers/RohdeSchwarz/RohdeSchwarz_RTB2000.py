@@ -1,6 +1,6 @@
 from qcodes import validators as vals
 from qcodes.parameters import Parameter, Function
-from qcodes.instrument import VisaInstrument, InstrumentModule
+from qcodes.instrument import VisaInstrument, InstrumentModule, InstrumentChannel, ChannelList
 from qcodes.utils.helpers import create_on_off_val_mapping
 
 class RohdeSchwarzRTB2000EdgeTrigger(InstrumentModule):
@@ -226,6 +226,159 @@ class RohdeSchwarzRTB2000Timebase(InstrumentModule):
             label="Minimum Roll Time",
         )
 
+class RohdeSchwarzRTB2000Channel(InstrumentChannel):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, channel: int, **kwargs):
+        super().__init__(parent, name, **kwargs)
+        self.channel = channel
+
+        self.state = Parameter(
+            name="state",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:state?",
+            set_cmd=f"channel{self.channel}:state {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Channel State",
+        )
+
+        self.scale = Parameter(
+            name="scale",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:scale?",
+            set_cmd=f"channel{self.channel}:scale {{}}",
+            vals=vals.Numbers(min_value=1e-3, max_value=5),
+            get_parser=float,
+            label="Vertical Scale",
+        )
+
+        self.range = Parameter(
+            name="range",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:range?",
+            set_cmd=f"channel{self.channel}:range {{}}",
+            vals=vals.Numbers(min_value=1e-2, max_value=50),
+            get_parser=float,
+            label="Vertical Range",
+        )
+
+        self.position = Parameter(
+            name="position",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:position?",
+            set_cmd=f"channel{self.channel}:position {{}}",
+            vals=vals.Numbers(min_value=-5, max_value=5),
+            get_parser=float,
+            label="Vertical Position",
+        )
+
+        self.offset = Parameter(
+            name="offset",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:offset?",
+            set_cmd=f"channel{self.channel}:offset {{}}",
+            vals=vals.Numbers(min_value=-40, max_value=40),
+            get_parser=float,
+            label="Vertical Offset",
+        )
+
+        self.coupling = Parameter(
+            name="coupling",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:coupling?",
+            set_cmd=f"channel{self.channel}:coupling {{}}",
+            vals=vals.Enum("dclimit", "aclimit", "gnd"),
+            label="Channel Coupling",
+        )
+
+        self.bandwidth = Parameter(
+            name="bandwidth",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:bandwidth?",
+            set_cmd=f"channel{self.channel}:bandwidth {{}}",
+            vals=vals.Enum("full", "b20"),
+            label="Channel Bandwidth",
+        )
+
+        self.polarity = Parameter(
+            name="polarity",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:polarity?",
+            set_cmd=f"channel{self.channel}:polarity {{}}",
+            vals=vals.Enum("normal", "inverted"),
+            label="Channel Polarity",
+        )
+
+        self.skew = Parameter(
+            name="skew",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:skew?",
+            set_cmd=f"channel{self.channel}:skew {{}}",
+            vals=vals.Numbers(min_value=-500e-9, max_value=500e-9),
+            get_parser=float,
+            label="Channel Skew",
+        )
+
+        self.zero_offset = Parameter(
+            name="zero_offset",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:zoffset?",
+            set_cmd=f"channel{self.channel}:zoffset {{}}",
+            vals=vals.Numbers(min_value=-101e-3, max_value=101e-3),
+            get_parser=float,
+            label="Channel Zero Offset",
+        )
+
+        self.color_scale = Parameter(
+            name="color_scale",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:wcolor?",
+            set_cmd=f"channel{self.channel}:wcolor {{}}",
+            vals=vals.Enum("temperature", "rainbow", "fire", "default"),
+            label="Channel Color Scale",
+        )
+
+        self.threshold = Parameter(
+            name="threshold",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:threshold?",
+            set_cmd=f"channel{self.channel}:threshold {{}}",
+            vals=vals.Numbers(min_value=-100, max_value=100),
+            get_parser=float,
+            label="Channel Digitization Threshold",
+        )
+
+        self.find_threshold = Function(
+            name="find_threshold",
+            instrument=self,
+            call_cmd=f"channel{self.channel}:threshold:findlevel",
+        )
+
+        self.threshold_hysteresis = Parameter(
+            name="threshold_hysteresis",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:threshold:hysteresis?",
+            set_cmd=f"channel{self.channel}:threshold:hysteresis {{}}",
+            vals=vals.Enum("small", "medium", "large"),
+            label="Channel Digitization Threshold Hysteresis",
+        )
+
+        self.label = Parameter(
+            name="label",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:label?",
+            set_cmd=f"channel{self.channel}:label '{{}}'",
+            vals=vals.Strings(max_length=8),
+            label="Channel Label",
+        )
+
+        self.label_state = Parameter(
+            name="label_state",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:label:state?",
+            set_cmd=f"channel{self.channel}:label:state {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Channel Label State",
+        )
+
 class RohdeSchwarzRTB2000(VisaInstrument):
     """
     QCoDeS driver for the Rohde&Schwarz RTB2000 family
@@ -236,3 +389,11 @@ class RohdeSchwarzRTB2000(VisaInstrument):
 
         self.add_submodule("trigger", RohdeSchwarzRTB2000Trigger(self, "trigger"))
         self.add_submodule("timebase", RohdeSchwarzRTB2000Timebase(self, "timebase"))
+
+        channels = []
+        for i in range(1, 5):
+            channel = RohdeSchwarzRTB2000Channel(self, f"channel{i}", i)
+            self.add_submodule(f"channel{i}", channel)
+            channels.append(channel)
+        channel_list = ChannelList(self, "channels", RohdeSchwarzRTB2000Channel, channels)
+        self.add_submodule("channels", channel_list)
