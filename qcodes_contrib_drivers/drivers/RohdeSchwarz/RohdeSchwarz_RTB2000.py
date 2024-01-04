@@ -397,3 +397,7 @@ class RohdeSchwarzRTB2000(VisaInstrument):
             channels.append(channel)
         channel_list = ChannelList(self, "channels", RohdeSchwarzRTB2000Channel, channels)
         self.add_submodule("channels", channel_list)
+
+        self.run = Function("run", instrument=self, call_cmd="run")
+        self.single = Function("single", instrument=self, call_cmd="single")
+        self.stop = Function("stop", instrument=self, call_cmd="stop")
