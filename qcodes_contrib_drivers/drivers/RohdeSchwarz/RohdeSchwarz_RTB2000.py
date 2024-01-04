@@ -226,6 +226,127 @@ class RohdeSchwarzRTB2000Timebase(InstrumentModule):
             label="Minimum Roll Time",
         )
 
+class RohdeSchwarzRTB2000Acquire(InstrumentModule):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
+        super().__init__(parent, name, **kwargs)
+
+        self.state = Parameter(
+            name="state",
+            instrument=self,
+            get_cmd="acquire:state?",
+            set_cmd="acquire:state {}",
+            vals=vals.Enum("run", "stop", "break"),
+            label="Acquisition State",
+        )
+
+        self.type = Parameter(
+            name="type",
+            instrument=self,
+            get_cmd="acquire:type?",
+            set_cmd="acquire:type {}",
+            vals=vals.Enum("refresh", "average", "envelope"),
+            label="Acquisition Type",
+        )
+
+        self.interpolate = Parameter(
+            name="interpolate",
+            instrument=self,
+            get_cmd="acquire:interpolate?",
+            set_cmd="acquire:interpolate {}",
+            vals=vals.Enum("sinx", "linear", "smhd"),
+            label="Interpolation Mode",
+        )
+
+        self.automatic_points = Parameter(
+            name="automatic_points",
+            instrument=self,
+            get_cmd="acquire:points:automatic?",
+            set_cmd="acquire:points:automatic {}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Automatic Record Length",
+        )
+
+        self.points = Parameter(
+            name="points",
+            instrument=self,
+            get_cmd="acquire:points?",
+            set_cmd="acquire:points {}",
+            vals=vals.Ints(min_value=10000, max_value=20000000),
+            get_parser=int,
+            label="Record Length",
+        )
+
+        self.adc_sample_rate = Parameter(
+            name="adc_sample_rate",
+            instrument=self,
+            get_cmd="acquire:points:arate?",
+            set_cmd=False,
+            get_parser=float,
+            label="ADC Sample Rate",
+        )
+
+        self.display_sample_rate = Parameter(
+            name="display_sample_rate",
+            instrument=self,
+            get_cmd="acquire:srate?",
+            set_cmd=False,
+            get_parser=float,
+            label="Display Sample Rate",
+        )
+
+        self.peak_detect = Parameter(
+            name="peak_detect",
+            instrument=self,
+            get_cmd="acquire:peakdetect?",
+            set_cmd="acquire:peakdetect {}",
+            val_mapping=create_on_off_val_mapping(on_val="AUTO", off_val="OFF"),
+            label="Peak Detection Mode",
+        )
+
+        self.high_resolution = Parameter(
+            name="high_resolution",
+            instrument=self,
+            get_cmd="acquire:hresolution?",
+            set_cmd="acquire:hresolution {}",
+            val_mapping=create_on_off_val_mapping(on_val="AUTO", off_val="OFF"),
+            label="High Resolution Mode",
+        )
+
+        self.nsingle_count = Parameter(
+            name="nsingle_count",
+            instrument=self,
+            get_cmd="acquire:nsingle:count?",
+            set_cmd="acquire:nsingle:count {}",
+            vals=vals.Ints(min_value=1, max_value=8),
+            get_parser=int,
+            label="Number of Single Waveforms",
+        )
+
+        self.average_count = Parameter(
+            name="average_count",
+            instrument=self,
+            get_cmd="acquire:average:count?",
+            set_cmd="acquire:average:count {}",
+            vals=vals.Ints(min_value=2, max_value=100000),
+            get_parser=int,
+            label="Average Count",
+        )
+
+        self.average_reset = Function(
+            name="average_reset",
+            instrument=self,
+            call_cmd="acquire:average:reset"
+        )
+
+        self.average_complete = Parameter(
+            name="average_complete",
+            instrument=self,
+            get_cmd="acquire:average:complete?",
+            set_cmd=False,
+            get_parser=lambda x: bool(int(x)),
+            label="Average Completed",
+        )
+
 class RohdeSchwarzRTB2000Channel(InstrumentChannel):
     def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, channel: int, **kwargs):
         super().__init__(parent, name, **kwargs)
@@ -389,6 +510,7 @@ class RohdeSchwarzRTB2000(VisaInstrument):
 
         self.add_submodule("trigger", RohdeSchwarzRTB2000Trigger(self, "trigger"))
         self.add_submodule("timebase", RohdeSchwarzRTB2000Timebase(self, "timebase"))
+        self.add_submodule("acquire", RohdeSchwarzRTB2000Acquire(self, "acquire"))
 
         channels = []
         for i in range(1, 5):
