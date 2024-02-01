@@ -159,6 +159,137 @@ class RohdeSchwarzRTB2000Trigger(InstrumentModule):
         self.add_submodule("edge", RohdeSchwarzRTB2000EdgeTrigger(self, "edge"))
         self.add_submodule("width", RohdeSchwarzRTB2000WidthTrigger(self, "width"))
 
+class RohdeSchwarzRTB2000Cursor(InstrumentModule):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
+        super().__init__(parent, name, **kwargs)
+
+        self.state = Parameter(
+            name="state",
+            instrument=self,
+            get_cmd=f"cursor:state?",
+            set_cmd=f"cursor:state {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Cursor State",
+        )
+
+        self.function = Parameter(
+            name="function",
+            instrument=self,
+            get_cmd=f"cursor:function?",
+            set_cmd=f"cursor:function {{}}",
+            vals=vals.Enum("horizontal", "vertical", "hvertical"),
+            label="Cursor Function",
+        )
+
+        self.source = Parameter(
+            name="source",
+            instrument=self,
+            get_cmd=f"cursor:source?",
+            set_cmd=f"cursor:source {{}}",
+            vals=vals.Strings(),
+            label="Cursor Source",
+        )
+
+        self.tracking = Parameter(
+            name="tracking",
+            instrument=self,
+            get_cmd=f"cursor:tracking?",
+            set_cmd=f"cursor:tracking {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Cursor Tracking State",
+        )
+
+        self.x1 = Parameter(
+            name="x1",
+            instrument=self,
+            get_cmd=f"cursor:x1position?",
+            set_cmd=f"cursor:x1position {{}}",
+            vals=vals.Numbers(),
+            get_parser=float,
+            label="Cursor X1 Position",
+        )
+
+        self.x2 = Parameter(
+            name="x2",
+            instrument=self,
+            get_cmd=f"cursor:x2position?",
+            set_cmd=f"cursor:x2position {{}}",
+            vals=vals.Numbers(),
+            get_parser=float,
+            label="Cursor X2 Position",
+        )
+
+        self.x_delta = Parameter(
+            name="x_delta",
+            instrument=self,
+            get_cmd=f"cursor:xdelta?",
+            set_cmd=False,
+            get_parser=float,
+            label="Cursor X1 - X2",
+        )
+
+        self.y1 = Parameter(
+            name="y1",
+            instrument=self,
+            get_cmd=f"cursor:y1position?",
+            set_cmd=f"cursor:y1position {{}}",
+            vals=vals.Numbers(),
+            get_parser=float,
+            label="Cursor Y1 Position",
+        )
+
+        self.y2 = Parameter(
+            name="y2",
+            instrument=self,
+            get_cmd=f"cursor:y2position?",
+            set_cmd=f"cursor:y2position {{}}",
+            vals=vals.Numbers(),
+            get_parser=float,
+            label="Cursor Y2 Position",
+        )
+
+        self.y_delta = Parameter(
+            name="y_delta",
+            instrument=self,
+            get_cmd=f"cursor:ydelta?",
+            set_cmd=False,
+            get_parser=float,
+            label="Cursor Y1 - Y2",
+        )
+
+        self.x_coupling = Parameter(
+            name="x_coupling",
+            instrument=self,
+            get_cmd=f"cursor:xcoupling?",
+            set_cmd=f"cursor:xcoupling {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Cursor X Coupling",
+        )
+
+        self.y_coupling = Parameter(
+            name="y_coupling",
+            instrument=self,
+            get_cmd=f"cursor:ycoupling?",
+            set_cmd=f"cursor:ycoupling {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Cursor Y Coupling",
+        )
+
+        self.autoset = Function(
+            name="autoset",
+            instrument=self,
+            call_cmd="cursor:swave",
+        )
+
+        self.autoscale = Parameter(
+            name="autoscale",
+            instrument=self,
+            get_cmd=f"cursor:tracking:scale?",
+            set_cmd=f"cursor:tracking:scale {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Cursor Autoscale",
+        )
+
 class RohdeSchwarzRTB2000Timebase(InstrumentModule):
     def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
         super().__init__(parent, name, **kwargs)
@@ -568,6 +699,7 @@ class RohdeSchwarzRTB2000(VisaInstrument):
         super().__init__(name=name, address=address, terminator="\n", **kwargs)
 
         self.add_submodule("trigger", RohdeSchwarzRTB2000Trigger(self, "trigger"))
+        self.add_submodule("cursor", RohdeSchwarzRTB2000Cursor(self, "cursor"))
         self.add_submodule("timebase", RohdeSchwarzRTB2000Timebase(self, "timebase"))
         self.add_submodule("acquire", RohdeSchwarzRTB2000Acquire(self, "acquire"))
 
