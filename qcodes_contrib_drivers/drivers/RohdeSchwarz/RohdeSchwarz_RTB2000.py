@@ -230,6 +230,20 @@ class RohdeSchwarzRTB2000Timebase(InstrumentModule):
             label="Minimum Roll Time",
         )
 
+    def header(self):
+        header = self.ask("channel:data:header?").split(",")
+        start, stop, record_length, values_per_interval = header
+        return dict(
+            start=float(start),
+            stop=float(stop),
+            record_length=int(record_length),
+            values_per_interval=int(values_per_interval)
+        )
+
+    def data(self):
+        header = self.header()
+        return np.linspace(header["start"], header["stop"], num=header["record_length"], endpoint=True)
+
 class RohdeSchwarzRTB2000Acquire(InstrumentModule):
     def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
         super().__init__(parent, name, **kwargs)
