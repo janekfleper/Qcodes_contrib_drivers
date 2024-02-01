@@ -1,7 +1,11 @@
+import numpy as np
+
 from qcodes import validators as vals
 from qcodes.parameters import Parameter, Function
 from qcodes.instrument import VisaInstrument, InstrumentModule, InstrumentChannel, ChannelList
 from qcodes.utils.helpers import create_on_off_val_mapping
+
+DATATYPES = {"REAL,32": "f", "UINT,8": "B", "UINT,16": "H", "UINT,32": "I"}
 
 class RohdeSchwarzRTB2000EdgeTrigger(InstrumentModule):
     def __init__(self, parent: "RohdeSchwarzRTB2000Trigger", name: str, **kwargs):
@@ -500,6 +504,47 @@ class RohdeSchwarzRTB2000Channel(InstrumentChannel):
             label="Channel Label State",
         )
 
+        self.y_origin = Parameter(
+            name="y_origin",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:data:yorigin?",
+            set_cmd=False,
+            get_parser=float,
+            label="Voltage Value for the Integer 0",
+        )
+
+        self.y_increment = Parameter(
+            name="y_increment",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:data:yincrement?",
+            set_cmd=False,
+            get_parser=float,
+            label="Voltage Value per Integer bit",
+        )
+
+        self.y_resolution = Parameter(
+            name="y_resolution",
+            instrument=self,
+            get_cmd=f"channel{self.channel}:data:yresolution?",
+            set_cmd=False,
+            get_parser=float,
+            label="Vertical Bit Resolution",
+        )
+
+    def data(self, raw: bool = False):
+        data_format = self.parent.data_format()
+        if data_format == "ASC,0":
+            data = self.ask(f"channel{self.channel}:data?")
+            return data if raw else np.array([float(v) for v in data.split(",")])
+
+        datatype = DATATYPES[data_format]
+        is_big_endian = (self.parent.byte_order() == "MSBF")
+        self.write(f"channel{self.channel}:data?")
+        data = np.array(self.parent.visa_handle.read_binary_values(datatype, is_big_endian=is_big_endian))
+        if raw or datatype == "REAL,32":
+            return data
+        return self.y_origin() + (self.y_increment() * data)
+
 class RohdeSchwarzRTB2000(VisaInstrument):
     """
     QCoDeS driver for the Rohde&Schwarz RTB2000 family
@@ -523,3 +568,21 @@ class RohdeSchwarzRTB2000(VisaInstrument):
         self.run = Function("run", instrument=self, call_cmd="run")
         self.single = Function("single", instrument=self, call_cmd="single")
         self.stop = Function("stop", instrument=self, call_cmd="stop")
+
+        self.data_format = Parameter(
+            name="data_format",
+            instrument=self,
+            get_cmd="format:data?",
+            set_cmd="format:data {}",
+            vals=vals.Enum("ascii", "real", "uint,8", "uint,16", "uint,32"),
+            label="Data Format",
+        )
+
+        self.byte_order = Parameter(
+            name="byte_order",
+            instrument=self,
+            get_cmd="format:border?",
+            set_cmd="format:border {}",
+            vals=vals.Enum("msbfirst", "lsbfirst"),
+            label="Byte Order",
+        )
