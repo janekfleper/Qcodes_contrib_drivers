@@ -796,6 +796,7 @@ class RohdeSchwarzRTB2000Channel(InstrumentChannel):
             get_cmd=f"channel{self.channel}:label?",
             set_cmd=f"channel{self.channel}:label '{{}}'",
             vals=vals.Strings(max_length=8),
+            get_parser=lambda x: x.strip('"'),
             label="Channel Label",
         )
 
