@@ -311,10 +311,29 @@ class RohdeSchwarzRTB2000MeasurementStatistics(InstrumentModule):
         )
 
     def values(self):
+        """Read all values from the statistics buffer
+
+        The buffer size is always 1000. If there are fewer values currently
+        stored in the buffer, the empty values will be "9.91E+37". These
+        values are not included in the array that is returned.
+
+        Returns:
+            numpy.ndarray, dtype = float
+        """
         values = self.ask(f"measurement{self.measurement}:statistics:value:all?")
         return np.array([float(value) for value in values.split(",") if value != "9.91E+37"])
 
     def value(self, n: int) -> float:
+        """Read a single value from the statistics buffer
+
+        The value "9.91E+37" is returned as NaN.
+
+        Args:
+            n: Buffer index, must be in [1, 1000]
+
+        Returns:
+            float
+        """
         if n < 1 or n > 1000:
             raise ValueError(f"{n} is invalid: must be between 1 and 1000 inclusive")
         value = self.ask(f"measurement{self.measurement}:statistics:value{n}?")
