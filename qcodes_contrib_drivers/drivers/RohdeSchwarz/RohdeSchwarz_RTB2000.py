@@ -290,6 +290,131 @@ class RohdeSchwarzRTB2000Cursor(InstrumentModule):
             label="Cursor Autoscale",
         )
 
+class RohdeSchwarzRTB2000MeasurementStatistics(InstrumentModule):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, measurement: int, **kwargs):
+        super().__init__(parent, name, **kwargs)
+        self.measurement = measurement
+
+        self.state = Parameter(
+            name="state",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:statistics:enable?",
+            set_cmd=f"measurement{self.measurement}:statistics:enable {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Measurement Statistics",
+        )
+
+        self.reset = Function(
+            name="reset",
+            instrument=self,
+            call_cmd=f"measurement{self.measurement}:statistics:reset",
+        )
+
+    def values(self):
+        values = self.ask(f"measurement{self.measurement}:statistics:value:all?")
+        return np.array([float(value) for value in values.split(",") if value != "9.91E+37"])
+
+    def value(self, n: int):
+        value = self.ask(f"measurement{self.measurement}:statistics:value{n}?")
+        return value
+
+class RohdeSchwarzRTB2000Measurement(InstrumentChannel):
+    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, measurement: int, **kwargs):
+        super().__init__(parent, name, **kwargs)
+        self.measurement = measurement
+
+        self.state = Parameter(
+            name="state",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:enable?",
+            set_cmd=f"measurement{self.measurement}:enable {{}}",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            label="Measurement State",
+        )
+
+        self.type = Parameter(
+            name="type",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:main?",
+            set_cmd=f"measurement{self.measurement}:main {{}}",
+            vals=vals.Strings(),
+            label="Measurement Type",
+        )
+
+        self.source = Parameter(
+            name="source",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:source?",
+            set_cmd=f"measurement{self.measurement}:source {{}}",
+            vals=vals.Strings(),
+            label="Measurement Source",
+        )
+
+        self.delay_slope = Parameter(
+            name="delay_slope",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:delay:slope?",
+            set_cmd=f"measurement{self.measurement}:delay:slope {{}}",
+            vals=vals.Strings(),
+            label="Measurement Delay Slope",
+        )
+
+        self.result = Parameter(
+            name="result",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:actual?",
+            set_cmd=False,
+            get_parser=float,
+            label="Measurement Result",
+        )
+
+        self.average = Parameter(
+            name="average",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:average?",
+            set_cmd=False,
+            get_parser=float,
+            label="Measurement Average",
+        )
+
+        self.std = Parameter(
+            name="std",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:stddev?",
+            set_cmd=False,
+            get_parser=float,
+            label="Measurement Standard Deviation",
+        )
+
+        self.minimum = Parameter(
+            name="minimum",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:npeak?",
+            set_cmd=False,
+            get_parser=float,
+            label="Measurement Minimum Result",
+        )
+
+        self.maximum = Parameter(
+            name="maximum",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:ppeak?",
+            set_cmd=False,
+            get_parser=float,
+            label="Measurement Maximum Result",
+        )
+
+        self.waveform_count = Parameter(
+            name="waveform_count",
+            instrument=self,
+            get_cmd=f"measurement{self.measurement}:result:wfmcount?",
+            set_cmd=False,
+            get_parser=int,
+            label="Measurement Waveform Count",
+        )
+
+        self.add_submodule("statistics", RohdeSchwarzRTB2000MeasurementStatistics(self, "statistics", self.measurement))
+
 class RohdeSchwarzRTB2000Timebase(InstrumentModule):
     def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, **kwargs):
         super().__init__(parent, name, **kwargs)
@@ -700,6 +825,15 @@ class RohdeSchwarzRTB2000(VisaInstrument):
 
         self.add_submodule("trigger", RohdeSchwarzRTB2000Trigger(self, "trigger"))
         self.add_submodule("cursor", RohdeSchwarzRTB2000Cursor(self, "cursor"))
+
+        measurements = []
+        for i in range(1, 7):
+            measurement = RohdeSchwarzRTB2000Measurement(self, f"measurement{i}", i)
+            self.add_submodule(f"measurement{i}", measurement)
+            measurements.append(measurement)
+        measurement_list = ChannelList(self, "measurement", RohdeSchwarzRTB2000Measurement, measurements)
+        self.add_submodule("measurements", measurement_list)
+
         self.add_submodule("timebase", RohdeSchwarzRTB2000Timebase(self, "timebase"))
         self.add_submodule("acquire", RohdeSchwarzRTB2000Acquire(self, "acquire"))
 
