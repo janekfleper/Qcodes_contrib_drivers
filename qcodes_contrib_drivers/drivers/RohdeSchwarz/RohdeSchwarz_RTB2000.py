@@ -314,9 +314,9 @@ class RohdeSchwarzRTB2000MeasurementStatistics(InstrumentModule):
         values = self.ask(f"measurement{self.measurement}:statistics:value:all?")
         return np.array([float(value) for value in values.split(",") if value != "9.91E+37"])
 
-    def value(self, n: int):
+    def value(self, n: int) -> float:
         value = self.ask(f"measurement{self.measurement}:statistics:value{n}?")
-        return value
+        return float(value) if value != "9.91E+37" else np.nan
 
 class RohdeSchwarzRTB2000Measurement(InstrumentChannel):
     def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, measurement: int, **kwargs):
