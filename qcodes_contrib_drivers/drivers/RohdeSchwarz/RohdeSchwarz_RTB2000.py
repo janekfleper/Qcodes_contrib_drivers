@@ -291,7 +291,7 @@ class RohdeSchwarzRTB2000Cursor(InstrumentModule):
         )
 
 class RohdeSchwarzRTB2000MeasurementStatistics(InstrumentModule):
-    def __init__(self, parent: "RohdeSchwarzRTB2000", name: str, measurement: int, **kwargs):
+    def __init__(self, parent: "RohdeSchwarzRTB2000Measurement", name: str, measurement: int, **kwargs):
         super().__init__(parent, name, **kwargs)
         self.measurement = measurement
 
