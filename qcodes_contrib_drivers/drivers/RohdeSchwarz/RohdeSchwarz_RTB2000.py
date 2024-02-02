@@ -837,6 +837,16 @@ class RohdeSchwarzRTB2000Channel(InstrumentChannel):
         )
 
     def data(self, raw: bool = False):
+        """Read the channel data based on the data format
+
+        If the data format is ASCII, the raw data will be a string with the
+        values separated by a comma. If the data format is INT, the raw data
+        will be an array of dtype int without the scale and origin of the
+        y-axis.
+
+        Args:
+            raw (bool): Return the raw data if applicable
+        """
         data_format = self.parent.data_format()
         if data_format == "ASC,0":
             data = self.ask(f"channel{self.channel}:data?")
