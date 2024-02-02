@@ -315,6 +315,8 @@ class RohdeSchwarzRTB2000MeasurementStatistics(InstrumentModule):
         return np.array([float(value) for value in values.split(",") if value != "9.91E+37"])
 
     def value(self, n: int) -> float:
+        if n < 1 or n > 1000:
+            raise ValueError(f"{n} is invalid: must be between 1 and 1000 inclusive")
         value = self.ask(f"measurement{self.measurement}:statistics:value{n}?")
         return float(value) if value != "9.91E+37" else np.nan
 
