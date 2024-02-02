@@ -508,6 +508,14 @@ class RohdeSchwarzRTB2000Timebase(InstrumentModule):
         )
 
     def header(self):
+        """Read the timebase header
+
+        The header includes the start time, the stop time, the record length
+        and the number of values per interval.
+
+        Returns:
+            dict
+        """
         header = self.ask("channel:data:header?").split(",")
         start, stop, record_length, values_per_interval = header
         return dict(
@@ -518,6 +526,11 @@ class RohdeSchwarzRTB2000Timebase(InstrumentModule):
         )
 
     def data(self):
+        """Return the timebase data as an array
+
+        Returns:
+            numpy.ndarray, dtype = float
+        """
         header = self.header()
         return np.linspace(header["start"], header["stop"], num=header["record_length"], endpoint=True)
 
