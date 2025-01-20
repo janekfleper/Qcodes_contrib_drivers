@@ -28,7 +28,7 @@ class TaborWW1070Output(InstrumentModule):
             instrument=self,
             set_cmd=f"output:filter {{}}",
             get_cmd="output:filter?",
-            vals=vals.Enum("none", "25M", "50M", "all"),
+            vals=vals.Enum("NONE", "25M", "50M", "ALL"),
             docstring="Select the filter that is connected to the output",
         )
 
@@ -40,17 +40,20 @@ class TaborWW1070Function(InstrumentModule):
         self.mode = Parameter(
             name="mode",
             instrument=self,
-            set_cmd=f"function:mode {{}}",
+            set_cmd="function:mode {}",
             get_cmd="function:mode?",
-            vals=vals.Enum("fixed", "user", "sequence"),
+            vals=vals.Enum("FIX", "USER", "SEQ"),
             docstring="Type of waveform at the output connector",
         )
 
         self.shape = Parameter(
             name="shape",
             instrument=self,
-            set_cmd=f"function:shape {{}}",
+            set_cmd="function:shape {}",
             get_cmd="function:shape?",
+            vals=vals.Enum(
+                "SIN", "TRI", "SQU", "PULS", "RAMP", "SINC", "EXP", "GAUS", "NOIS", "DC"
+            ),
             docstring="Shape of the waveform at the output connector",
         )
 
@@ -62,11 +65,11 @@ class TaborWW1070Voltage(InstrumentModule):
         self.level = Parameter(
             name="level",
             instrument=self,
-            set_cmd=f"voltage:level {{}}",
+            set_cmd="voltage:level {}",
             get_cmd="voltage:level?",
             get_parser=float,
             vals=vals.MultiType(
-                vals.Numbers(10e-3, 10), vals.Enum("minimum", "maximum")
+                vals.Numbers(10e-3, 10), vals.Enum("MIN", "MAX")
             ),
             docstring="Peak to peak amplitude of the output waveform",
         )
@@ -74,7 +77,7 @@ class TaborWW1070Voltage(InstrumentModule):
         self.offset = Parameter(
             name="offset",
             instrument=self,
-            set_cmd=f"voltage:offset {{}}",
+            set_cmd="voltage:offset {}",
             get_cmd="voltage:offset?",
             get_parser=float,
             vals=vals.Numbers(-4.5, 4.5),
@@ -129,7 +132,7 @@ class TaborWW1070Trigger(InstrumentModule):
             instrument=self,
             set_cmd="trigger:slope {}",
             get_cmd="trigger:slope?",
-            vals=vals.Enum("positive", "negative"),
+            vals=vals.Enum("POS", "NEG"),
             docstring="Set the edge sensitivity for the trigger input",
         )
 
@@ -138,7 +141,7 @@ class TaborWW1070Trigger(InstrumentModule):
             instrument=self,
             set_cmd="trigger:source:advance {}",
             get_cmd="trigger:source:advance?",
-            vals=vals.Enum("external", "internal"),
+            vals=vals.Enum("EXT", "INT"),
             docstring="Set trigger input source",
         )
 
