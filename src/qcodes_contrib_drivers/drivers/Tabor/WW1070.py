@@ -9,8 +9,8 @@ from qcodes.instrument.parameter import Parameter
 from qcodes.utils.helpers import create_on_off_val_mapping
 
 
-class Output(InstrumentModule):
-    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
+class TaborWW1070Output(InstrumentModule):
+    def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.state = Parameter(
@@ -32,8 +32,8 @@ class Output(InstrumentModule):
         )
 
 
-class Function(InstrumentModule):
-    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
+class TaborWW1070Function(InstrumentModule):
+    def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.mode = Parameter(
@@ -54,8 +54,8 @@ class Function(InstrumentModule):
         )
 
 
-class Voltage(InstrumentModule):
-    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
+class TaborWW1070Voltage(InstrumentModule):
+    def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.level = Parameter(
@@ -81,8 +81,8 @@ class Voltage(InstrumentModule):
         )
 
 
-class Trigger(InstrumentModule):
-    def __init__(self, parent: "WW1070", name: str, **kwargs: Any):
+class TaborWW1070Trigger(InstrumentModule):
+    def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
         self.burst = Parameter(
@@ -159,7 +159,7 @@ class Trigger(InstrumentModule):
         )
 
 
-class WW1070(VisaInstrument):
+class TaborWW1070(VisaInstrument):
     """
     This is the QCoDeS driver for the Keysight InfiniiVision oscilloscopes
     """
@@ -200,7 +200,7 @@ class WW1070(VisaInstrument):
             docstring="Query for error codes",
         )
 
-        self.add_submodule("output", Output(self, "output"))
-        self.add_submodule("function", Function(self, "function"))
-        self.add_submodule("voltage", Voltage(self, "voltage"))
-        self.add_submodule("trigger", Trigger(self, "trigger"))
+        self.add_submodule("output", TaborWW1070Output(self, "output"))
+        self.add_submodule("function", TaborWW1070Function(self, "function"))
+        self.add_submodule("voltage", TaborWW1070Voltage(self, "voltage"))
+        self.add_submodule("trigger", TaborWW1070Trigger(self, "trigger"))
