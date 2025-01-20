@@ -62,15 +62,13 @@ class TaborWW1070Voltage(InstrumentModule):
     def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
         super().__init__(parent, name, **kwargs)
 
-        self.level = Parameter(
-            name="level",
+        self.amplitude = Parameter(
+            name="amplitude",
             instrument=self,
-            set_cmd="voltage:level {}",
-            get_cmd="voltage:level?",
+            set_cmd="voltage {}",
+            get_cmd="voltage?",
             get_parser=float,
-            vals=vals.MultiType(
-                vals.Numbers(10e-3, 10), vals.Enum("MIN", "MAX")
-            ),
+            vals=vals.MultiType(vals.Numbers(10e-3, 10), vals.Enum("MIN", "MAX")),
             docstring="Peak to peak amplitude of the output waveform",
         )
 
