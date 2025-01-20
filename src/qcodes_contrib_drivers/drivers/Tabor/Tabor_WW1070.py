@@ -56,7 +56,15 @@ class TaborWW1070Function(InstrumentModule):
             ),
             docstring="Shape of the waveform at the output connector",
         )
-
+        self.frequency = Parameter(
+            name="frequency",
+            instrument=self,
+            set_cmd="frequency {}",
+            get_cmd="frequency?",
+            get_parser=float,
+            vals=vals.MultiType(vals.Numbers(100e-6, 100e6), vals.Enum("MIN", "MAX")),
+            docstring="Set the frequency of the standard waveform in Hz",
+        )
 
 class TaborWW1070Voltage(InstrumentModule):
     def __init__(self, parent: "TaborWW1070", name: str, **kwargs: Any):
