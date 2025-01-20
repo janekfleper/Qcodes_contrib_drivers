@@ -184,6 +184,22 @@ class WW1070(VisaInstrument):
 
         self.model = self.IDN()["model"]
 
+        self.opt = Parameter(
+            name="opt",
+            instrument=self,
+            set_cmd=False,
+            get_cmd="*opt?",
+            docstring="Query the device options",
+        )
+
+        self.error = Parameter(
+            name="error",
+            instrument=self,
+            set_cmd=False,
+            get_cmd=":system:error?",
+            docstring="Query for error codes",
+        )
+
         self.add_submodule("output", Output(self, "output"))
         self.add_submodule("function", Function(self, "function"))
         self.add_submodule("voltage", Voltage(self, "voltage"))
