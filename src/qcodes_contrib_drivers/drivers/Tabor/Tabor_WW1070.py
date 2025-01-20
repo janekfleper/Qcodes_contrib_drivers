@@ -202,6 +202,15 @@ class TaborWW1070(VisaInstrument):
             docstring="Query for error codes",
         )
 
+        self.continuous = Parameter(
+            name="continuous",
+            instrument=self,
+            set_cmd="initiate:continuous {}",
+            get_cmd="initiate:continuous?",
+            val_mapping=create_on_off_val_mapping(on_val=1, off_val=0),
+            docstring="Set the output in continuous or interrupted operation",
+        )
+
         self.add_submodule("output", TaborWW1070Output(self, "output"))
         self.add_submodule("function", TaborWW1070Function(self, "function"))
         self.add_submodule("voltage", TaborWW1070Voltage(self, "voltage"))
