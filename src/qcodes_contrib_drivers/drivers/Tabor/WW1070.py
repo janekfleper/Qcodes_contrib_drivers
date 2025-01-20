@@ -161,7 +161,7 @@ class TaborWW1070Trigger(InstrumentModule):
 
 class TaborWW1070(VisaInstrument):
     """
-    This is the QCoDeS driver for the Keysight InfiniiVision oscilloscopes
+    This is the QCoDeS driver for the Tabor WW1070 series AWG
     """
 
     def __init__(
