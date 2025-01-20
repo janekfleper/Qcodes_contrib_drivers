@@ -180,7 +180,7 @@ class TaborWW1070(VisaInstrument):
             timeout: Visa timeout, in secs.
             channels: The number of channels on the scope.
         """
-        super().__init__(name, address, timeout=timeout, terminator="\n", **kwargs)
+        super().__init__(name, address, timeout=timeout, terminator="\r\n", **kwargs)
         self.connect_message()
 
         self.model = self.IDN()["model"]
